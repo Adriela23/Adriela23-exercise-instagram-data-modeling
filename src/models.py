@@ -1,36 +1,66 @@
-import os
-import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+import enum
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, ForeignKey, Integer, Enum, String
 from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy import create_engine
 from eralchemy2 import render_er
 
-Base = declarative_base()
+db = SQLAlchemy()
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
 
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
+class Follower(db.Model):
     id = Column(Integer, primary_key=True)
-    street_name = Column(String(250))
-    street_number = Column(String(250))
-    post_code = Column(String(250), nullable=False)
-    person_id = Column(Integer, ForeignKey('person.id'))
-    person = relationship(Person)
+
+    user = Column(Integer, ForeignKey('user.id'))
+    user = relationship(user)
+    
+
+class Comment(db.Model):
+    id = Column(Integer, primary_key=True)
+    comment = Column(String(255), nullable=False)
+
+    user = Column(Integer, ForeignKey('user.id'))
+    user = relationship(user)
+
+
+class Post(db.Model):
+    id = Column(Integer, primary_key=True)
+    description = Column(String(255))
+
+    comment_id = Column(Integer, ForeignKey('comment.id'))
+    comment = relationship(Comment)
+
+
+class Type (enum.Enum):
+    video= 1
+    image= 2
+    img_set= 3
+
+class Media(db.Model):
+    id = Column(Integer, primary_key=True)
+    url= Column(String(255), nullable=False)
+    type = Column(Enum(Type), nullable=False)
+
+    post_id = Column(Integer, ForeignKey('post.id'))
+    post = relationship(Post)
+
+
+class User(db.Model):
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20), nullable=False)
+    username = Column(String(20), unique=True, nullable=False)
+    password = Column(String(20), nullable=False)
+    email = Column(String(50), nullable=False)
+
+    post_id = Column(Integer, ForeignKey('post.id'))
+    post = relationship(Post)
+
 
     def to_dict(self):
         return {}
 
-## Draw from SQLAlchemy base
+## Draw from SQLAlchemy base 
 try:
-    result = render_er(Base, 'diagram.png')
+    result = render_er(db.Model, './img/diagram.png')
     print("Success! Check the diagram.png file")
 except Exception as e:
     print("There was a problem genering the diagram")
